@@ -124,12 +124,19 @@ module RailsAdmin
       end
 
       def query_scope(scope, query, fields = config.list.fields.select(&:queryable?))
-        wb = WhereBuilder.new(scope)
-        fields.each do |field|
-          wb.add(field, field.parse_value(query), field.search_operator)
+        words = query.split " "
+        query = query.tr(" ", "%")
+
+        words.each do |word|
+          wb = WhereBuilder.new(scope)
+          word = "%#{word}%"
+          fields.each do |field|
+            wb.add(field, field.parse_value(word), field.search_operator)
+          end
+          scope = wb.build
         end
-        # OR all query statements
-        wb.build
+
+        scope
       end
 
       # filters example => {"string_field"=>{"0055"=>{"o"=>"like", "v"=>"test_value"}}, ...}
